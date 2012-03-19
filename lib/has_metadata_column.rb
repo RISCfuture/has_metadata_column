@@ -137,6 +137,27 @@ module HasMetadataColumn
           validates(name, options) unless options.empty? or (options.keys - [:allow_nil, :allow_blank]).empty?
         end
       end
+
+      if !respond_to?(:define_attribute_methods_with_metadata) && !superclass.respond_to?(:define_attribute_methods_with_metadata) &&
+        !respond_to?(:define_method_attribute_with_metadata) && !superclass.respond_to?(:define_method_attribute_with_metadata)
+        class << self
+          def define_attribute_methods_with_metadata
+            define_attribute_methods_without_metadata
+            metadata_column_fields.keys.each { |field| define_attribute_method field }
+          end
+          alias_method_chain :define_attribute_methods, :metadata
+
+          def define_method_attribute_with_metadata(attr_name)
+            return define_method_attribute_without_metadata(attr_name) unless metadata_column_fields.include?(attr_name.to_sym)
+            attribute_method_matchers.each do |matcher|
+              method_name = matcher.method_name(attr_name)
+              define_optimized_call generated_attribute_methods, method_name, matcher.method_missing_target, attr_name.to_s
+              attribute_method_matchers_cache.clear
+            end
+          end
+          alias_method_chain :define_method_attribute, :metadata
+        end
+      end
     end
   end
 

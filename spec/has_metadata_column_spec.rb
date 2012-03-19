@@ -223,6 +223,18 @@ describe HasMetadataColumn do
     it "should work when there is no associated metadata" do
       SpecSupport::HasMetadataTester.new(login: 'hello').changes.should eql('login' => [ nil, 'hello' ])
     end
+
+    describe "#attribute_changed?" do
+      it "should work with metadata attributes" do
+        @object.login   = 'me'
+        @object.untyped = 'baz'
+        @object.login_changed?.should be_true
+        @object.untyped_changed?.should be_true
+        @object.save!
+        @object.login_changed?.should be_false
+        @object.untyped_changed?.should be_false
+      end
+    end
   end
 
   describe "#as_json" do
