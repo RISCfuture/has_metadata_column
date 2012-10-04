@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "has_metadata_column"
-  s.version = "1.0.0"
+  s.version = "1.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Morgan"]
-  s.date = "2012-03-02"
+  s.date = "2012-10-04"
   s.description = "Reduce your table width and migration overhead by moving non-indexed columns to a separate metadata column."
   s.email = "git@timothymorgan.info"
   s.extra_rdoc_files = [
@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.required_ruby_version = Gem::Requirement.new(">= 1.9")
-  s.rubygems_version = "1.8.17"
+  s.rubygems_version = "1.8.24"
   s.summary = "Schemaless metadata using JSON columns"
 
   if s.respond_to? :specification_version then
