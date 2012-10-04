@@ -197,7 +197,7 @@ module HasMetadataColumn
                          value
                        end
         end
-        send :"#{field_name}=", options[:type].new(*args) unless args.empty?
+        send :"#{field_name}=", args.any? ? options[:type].new(*args) : nil
       else
         raise "#{field_name} has no type and cannot be used for multiparameter assignment"
       end

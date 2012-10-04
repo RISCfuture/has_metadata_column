@@ -154,6 +154,16 @@ describe HasMetadataColumn do
       @object.attributes = { 'date(1i)' => '1982', 'date(2i)' => '10', 'date(3i)' => '19' }
       @object.date.should eql(Date.civil(1982, 10, 19))
     end
+
+    it "should set a multiparam attribute to nil when the elements are nil" do
+      @object.attributes = { 'date(1i)' => nil, 'date(2i)' => nil, 'date(3i)' => nil }
+      @object.date.should be_nil
+    end
+
+    it "should set a multiparam attribute to nil when the elements are empty" do
+      @object.attributes = { 'date(1i)' => '', 'date(2i)' => '', 'date(3i)' => '' }
+      @object.date.should be_nil
+    end
   end
 
   describe "#attribute?" do
