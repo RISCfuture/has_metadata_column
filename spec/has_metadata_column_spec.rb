@@ -3,10 +3,10 @@ require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 describe HasMetadataColumn do
   describe "#has_metadata_column" do
     it "should not allow Rails-magic timestamped column names" do
-      -> { SpecSupport::HasMetadataTester.has_metadata_column(created_at: { }) }.should raise_error(/timestamp/)
-      -> { SpecSupport::HasMetadataTester.has_metadata_column(created_on: { }) }.should raise_error(/timestamp/)
-      -> { SpecSupport::HasMetadataTester.has_metadata_column(updated_at: { }) }.should raise_error(/timestamp/)
-      -> { SpecSupport::HasMetadataTester.has_metadata_column(updated_on: { }) }.should raise_error(/timestamp/)
+      -> { SpecSupport::HasMetadataTester.has_metadata_column(created_at: {}) }.should raise_error(/timestamp/)
+      -> { SpecSupport::HasMetadataTester.has_metadata_column(created_on: {}) }.should raise_error(/timestamp/)
+      -> { SpecSupport::HasMetadataTester.has_metadata_column(updated_at: {}) }.should raise_error(/timestamp/)
+      -> { SpecSupport::HasMetadataTester.has_metadata_column(updated_on: {}) }.should raise_error(/timestamp/)
     end
 
     it "should properly handle subclasses" do
@@ -40,9 +40,7 @@ describe HasMetadataColumn do
 
   [ :attribute, :attribute_before_type_cast, :_attribute ].each do |getter|
     describe "##{getter}" do
-      before :each do
-        @object   = SpecSupport::HasMetadataTester.new
-      end
+      before(:each) { @object = SpecSupport::HasMetadataTester.new }
 
       it "should return a field in the metadata object" do
         @object.send :write_attribute, :metadata, { untyped: 'bar' }.to_json
@@ -81,7 +79,7 @@ describe HasMetadataColumn do
 
     it "should merge new values into the existing hash" do
       @object.metadata = { 'can_be_nil' => 'bar' }.to_json
-      @object.untyped = 'foo'
+      @object.untyped  = 'foo'
       JSON.parse(@object.metadata)['untyped'].should eql('foo')
       JSON.parse(@object.metadata)['can_be_nil'].should eql('bar')
     end
@@ -167,9 +165,7 @@ describe HasMetadataColumn do
   end
 
   describe "#attribute?" do
-    before :each do
-      @object   = SpecSupport::HasMetadataTester.new
-    end
+    before(:each) { @object = SpecSupport::HasMetadataTester.new }
 
     context "untyped field" do
       it "should return true if the string is not blank" do
@@ -227,7 +223,7 @@ describe HasMetadataColumn do
       @object.login   = 'me'
       @object.untyped = 'baz'
       @object.save!
-      @object.changes.should eql({ })
+      @object.changes.should eql({})
     end
 
     it "should work when there is no associated metadata" do
@@ -300,6 +296,17 @@ describe HasMetadataColumn do
         :date                       => nil,
         :has_default                => "default",
         :no_valid                   => nil
+      })
+    end
+
+    it "should filter metadata fields with the :only option" do
+      @object.as_json(:only => :untyped).should eql("has_metadata_tester" => {
+        :untyped => nil
+      })
+
+      @object.as_json(:only => [:untyped, :id]).should eql("has_metadata_tester" => {
+        'id'     => nil,
+        :untyped => nil
       })
     end
 
@@ -416,6 +423,23 @@ describe HasMetadataColumn do
       XML
     end
 
+    it "should filter metadata with an :only option" do
+      @object.to_xml(:only => :untyped).should eql(<<-XML)
+<?xml version="1.0" encoding="UTF-8"?>
+<has-metadata-tester>
+  <untyped nil="true"/>
+</has-metadata-tester>
+      XML
+
+      @object.to_xml(:only => [ :untyped, :id ]).should eql(<<-XML)
+<?xml version="1.0" encoding="UTF-8"?>
+<has-metadata-tester>
+  <id type="integer" nil="true"/>
+  <untyped nil="true"/>
+</has-metadata-tester>
+      XML
+    end
+
     it "should not clobber an existing :methods option" do
       class << @object
         def foo() 1 end
@@ -464,12 +488,10 @@ describe HasMetadataColumn do
       XML
     end
   end
-  
+
   describe "#reload" do
-    before :each do
-      @object = SpecSupport::HasMetadataTester.create!(untyped: 'foo', number: 123, boolean: true, date: Date.today)
-    end
-    
+    before(:each) { @object = SpecSupport::HasMetadataTester.create!(untyped: 'foo', number: 123, boolean: true, date: Date.today) }
+
     it "should reload instance variables properly" do
       SpecSupport::HasMetadataTester.where(id: @object.id).update_all(metadata: { untyped: 'reloaded' }.to_json)
       @object.reload.untyped.should eql('reloaded')

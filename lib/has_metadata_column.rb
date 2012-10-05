@@ -164,15 +164,21 @@ module HasMetadataColumn
   # @private
   def as_json(options={})
     options           ||= Hash.new # the JSON encoder can sometimes give us nil options?
-    options[:except]  = Array.wrap(options[:except]) + [ self.class.metadata_column ]
-    options[:methods] = Array.wrap(options[:methods]) + self.class.metadata_column_fields.keys - options[:except].map(&:to_sym)
+    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata          = self.class.metadata_column_fields.keys
+    metadata          &= Array.wrap(options[:only]) if options[:only]
+    metadata          -= Array.wrap(options[:except])
+    options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
   end
 
   # @private
   def to_xml(options={})
-    options[:except]  = Array.wrap(options[:except]) + [ self.class.metadata_column ]
-    options[:methods] = Array.wrap(options[:methods]) + self.class.metadata_column_fields.keys - options[:except].map(&:to_sym)
+    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata          = self.class.metadata_column_fields.keys
+    metadata          &= Array.wrap(options[:only]) if options[:only]
+    metadata          -= Array.wrap(options[:except])
+    options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
   end
 
@@ -210,11 +216,11 @@ module HasMetadataColumn
   def inspect
     "#<#{self.class.to_s} #{attributes.except(self.class.metadata_column.to_s).merge(_metadata_hash.try(:stringify_keys) || {}).map { |k, v| "#{k}: #{v.inspect}" }.join(', ')}>"
   end
-  
+
   # @private
   def reload_with_metadata
-    res = reload_without_metadata
-    @_metadata_hash = nil
+    res                = reload_without_metadata
+    @_metadata_hash    = nil
     @_changed_metadata = nil
     res
   end
@@ -270,9 +276,9 @@ module HasMetadataColumn
     options = self.class.metadata_column_fields[attr.to_sym] || {}
     attribute_will_change! attr
     @_metadata_hash ||= {}
-    old = @_metadata_hash[attr.to_s]
+    old             = @_metadata_hash[attr.to_s]
     send :"#{self.class.metadata_column}=", @_metadata_hash.merge(attr.to_s => value).to_json
-    @_metadata_hash = nil
+    @_metadata_hash          = nil
     @_changed_metadata[attr] = old
     value
   end
@@ -281,7 +287,7 @@ module HasMetadataColumn
     return query_attribute_without_metadata(attr) unless self.class.metadata_column_fields.include?(attr.to_sym)
     return false unless (value = send(attr))
     options = self.class.metadata_column_fields[attr.to_sym] || {}
-    type = options[:type] || String
+    type    = options[:type] || String
     return !value.to_i.zero? if type.ancestors.include?(Numeric)
     return !value.blank?
   end

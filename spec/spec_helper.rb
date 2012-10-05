@@ -22,7 +22,7 @@ module SpecSupport
     include HasMetadataColumn
     self.table_name = 'users'
     has_metadata_column :metadata,
-                        untyped:                    { },
+                        untyped:                    {},
                         can_be_nil:                 { type: Date, allow_nil: true },
                         can_be_nil_with_default:    { type: Date, allow_nil: true, default: Date.today },
                         can_be_blank:               { type: Date, allow_blank: true },
@@ -36,7 +36,7 @@ module SpecSupport
   end
 
   class HasMetadataSubclass < HasMetadataTester
-    has_metadata_column :metadata, inherited: { }
+    has_metadata_column :metadata, inherited: {}
   end
 end
 
