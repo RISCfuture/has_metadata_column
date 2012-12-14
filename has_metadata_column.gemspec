@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "has_metadata_column"
-  s.version = "1.0.2"
+  s.version = "1.0.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Tim Morgan"]
-  s.date = "2012-10-04"
+  s.date = "2012-12-14"
   s.description = "Reduce your table width and migration overhead by moving non-indexed columns to a separate metadata column."
   s.email = "git@timothymorgan.info"
   s.extra_rdoc_files = [
