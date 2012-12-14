@@ -241,6 +241,8 @@ module HasMetadataColumn
   def _metadata_hash
     @_metadata_hash ||= begin
       send(self.class.metadata_column) ? JSON.parse(send(self.class.metadata_column)) : {}
+    rescue ActiveModel::MissingAttributeError
+      {}
     end
   end
 

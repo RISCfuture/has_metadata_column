@@ -61,6 +61,16 @@ describe HasMetadataColumn do
         @object.send :write_attribute, :metadata, { has_default: nil }.to_json
         @object.send(getter.to_s.sub('attribute', 'has_default')).should eql(nil)
       end
+
+      it "should not return nil if the metadata" do
+        @object         = SpecSupport::HasMetadataTester.new
+        @object.boolean = false
+        @object.date    = Date.today
+        @object.number  = 5
+        @object.save!
+        object = SpecSupport::HasMetadataTester.select('id').where(id: @object.id).first!
+        object.send(getter.to_s.sub('attribute', 'number')).should be_nil
+      end
     end
   end
 
