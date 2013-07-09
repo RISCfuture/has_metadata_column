@@ -20,7 +20,7 @@ module HasMetadataColumn
   extend ActiveSupport::Concern
 
   # Valid values for the `:type` option.
-  TYPES = [ String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time ]
+  TYPES = [String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
 
   # @private
   def self.metadata_typecast(value, type=nil)
@@ -110,7 +110,6 @@ module HasMetadataColumn
         alias_method_chain :attribute_method?, :metadata
         alias_method_chain :attribute, :metadata
         alias_method_chain :attribute_before_type_cast, :metadata
-        alias_method_chain :_attribute, :metadata
         alias_method_chain :attribute=, :metadata
         alias_method_chain :query_attribute, :metadata
         alias_method_chain :reload, :metadata
@@ -130,31 +129,35 @@ module HasMetadataColumn
 
           validate do |obj|
             value = obj.send(name)
-            errors.add(name, :incorrect_type) if !HasMetadataColumn.metadata_typecast(value, type).kind_of?(type) &&
-              (!options[:allow_nil] || (options[:allow_nil] && !value.nil?)) &&
-              (!options[:allow_blank] || (options[:allow_blank] && !value.blank?))
+            if !HasMetadataColumn.metadata_typecast(value, type).kind_of?(type) &&
+                (!options[:allow_nil] || (options[:allow_nil] && !value.nil?)) &&
+                (!options[:allow_blank] || (options[:allow_blank] && !value.blank?))
+              errors.add(name, :incorrect_type)
+            end
           end if type && type_validate
           validates(name, options) unless options.empty? or (options.keys - [:allow_nil, :allow_blank]).empty?
         end
       end
 
       if !respond_to?(:define_attribute_methods_with_metadata) && !superclass.respond_to?(:define_attribute_methods_with_metadata) &&
-        !respond_to?(:define_method_attribute_with_metadata) && !superclass.respond_to?(:define_method_attribute_with_metadata)
+          !respond_to?(:define_method_attribute_with_metadata) && !superclass.respond_to?(:define_method_attribute_with_metadata)
         class << self
           def define_attribute_methods_with_metadata
             define_attribute_methods_without_metadata
             metadata_column_fields.keys.each { |field| define_attribute_method field }
           end
+
           alias_method_chain :define_attribute_methods, :metadata
 
           def define_method_attribute_with_metadata(attr_name)
             return define_method_attribute_without_metadata(attr_name) unless metadata_column_fields.include?(attr_name.to_sym)
             attribute_method_matchers.each do |matcher|
               method_name = matcher.method_name(attr_name)
-              define_optimized_call generated_attribute_methods, method_name, matcher.method_missing_target, attr_name.to_s
+              define_proxy_call true, generated_attribute_methods, method_name, matcher.method_missing_target, attr_name.to_s
               attribute_method_matchers_cache.clear
             end
           end
+
           alias_method_chain :define_method_attribute, :metadata
         end
       end
@@ -163,10 +166,10 @@ module HasMetadataColumn
 
   # @private
   def as_json(options={})
-    options           ||= Hash.new # the JSON encoder can sometimes give us nil options?
-    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
-    metadata          = self.class.metadata_column_fields.keys
-    metadata          &= Array.wrap(options[:only]) if options[:only]
+    options          ||= Hash.new # the JSON encoder can sometimes give us nil options?
+    options[:except] = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata         = self.class.metadata_column_fields.keys
+    metadata &= Array.wrap(options[:only]) if options[:only]
     metadata          -= Array.wrap(options[:except])
     options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
@@ -174,9 +177,9 @@ module HasMetadataColumn
 
   # @private
   def to_xml(options={})
-    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
-    metadata          = self.class.metadata_column_fields.keys
-    metadata          &= Array.wrap(options[:only]) if options[:only]
+    options[:except] = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata         = self.class.metadata_column_fields.keys
+    metadata &= Array.wrap(options[:only]) if options[:only]
     metadata          -= Array.wrap(options[:except])
     options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
@@ -214,7 +217,7 @@ module HasMetadataColumn
 
   # @private
   def inspect
-    "#<#{self.class.to_s} #{attributes.except(self.class.metadata_column.to_s).merge(_metadata_hash.try(:stringify_keys) || {}).map { |k, v| "#{k}: #{v.inspect}" }.join(', ')}>"
+    "#<#{self.class.to_s} #{attributes.except(self.class.metadata_column.to_s).merge(_metadata_hash.try!(:stringify_keys) || {}).map { |k, v| "#{k}: #{v.inspect}" }.join(', ')}>"
   end
 
   # @private
@@ -275,11 +278,9 @@ module HasMetadataColumn
   def attribute_with_metadata=(attr, value)
     return send(:attribute_without_metadata=, attr, value) unless self.class.metadata_column_fields.include?(attr.to_sym)
 
-    options = self.class.metadata_column_fields[attr.to_sym] || {}
     attribute_will_change! attr
-    @_metadata_hash ||= {}
-    old             = @_metadata_hash[attr.to_s]
-    send :"#{self.class.metadata_column}=", @_metadata_hash.merge(attr.to_s => value).to_json
+    old = _metadata_hash[attr.to_s]
+    send :"#{self.class.metadata_column}=", _metadata_hash.merge(attr.to_s => value).to_json
     @_metadata_hash          = nil
     @_changed_metadata[attr] = old
     value
