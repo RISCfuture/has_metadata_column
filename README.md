@@ -4,7 +4,7 @@ Has Metadata Column -- Keep your tables narrow
 |             |                                 |
 |:------------|:--------------------------------|
 | **Author**  | Tim Morgan                      |
-| **Version** | 1.0.2 (Oct 4, 2012)             |
+| **Version** | 1.1.0 (Jul 9, 2013)             |
 | **License** | Released under the MIT License. |
 
 About
@@ -32,7 +32,7 @@ does not get its little fingers all up in ActiveRecord's business.
 
 h2. Installation
 
-**Important Note:** This gem is only compatible with Ruby 1.9 and Rails 3.0.
+**Important Note:** This gem is only compatible with Ruby 1.9 and Rails 4.0.
 
 Merely add the gem to your Rails project's `Gemfile`:
 
