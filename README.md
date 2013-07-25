@@ -4,7 +4,7 @@ Has Metadata Column -- Keep your tables narrow
 |             |                                 |
 |:------------|:--------------------------------|
 | **Author**  | Tim Morgan                      |
-| **Version** | 1.1.0 (Jul 9, 2013)             |
+| **Version** | 1.1.1 (Jul 25, 2013)            |
 | **License** | Released under the MIT License. |
 
 About
