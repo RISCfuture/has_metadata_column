@@ -103,8 +103,6 @@ module HasMetadataColumn
         class_attribute :metadata_column
         self.metadata_column = column || :metadata
 
-        after_save :_reset_metadata
-
         alias_method_chain :changed_attributes, :metadata_column
         alias_method_chain :attribute_will_change!, :metadata_column
         alias_method_chain :attribute_method?, :metadata
@@ -112,7 +110,6 @@ module HasMetadataColumn
         alias_method_chain :attribute_before_type_cast, :metadata
         alias_method_chain :attribute=, :metadata
         alias_method_chain :query_attribute, :metadata
-        alias_method_chain :reload, :metadata
       else
         raise "Cannot redefine existing metadata column #{self.metadata_column}" if column && column != self.metadata_column
         if metadata_column_fields.slice(*fields.keys) != fields
@@ -221,11 +218,25 @@ module HasMetadataColumn
   end
 
   # @private
-  def reload_with_metadata
-    res                = reload_without_metadata
-    @_metadata_hash    = nil
-    @_changed_metadata = nil
-    res
+  def save(*)
+    response = super
+    _reset_metadata if response
+    response
+  end
+
+  # @private
+  def save!(*)
+    super.tap do
+      _reset_metadata
+    end
+  end
+
+  # @private
+  def reload(*)
+    super.tap do
+      @_metadata_hash    = nil
+      _reset_metadata
+    end
   end
 
   private
