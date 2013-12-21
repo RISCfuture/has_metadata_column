@@ -139,16 +139,32 @@ module HasMetadataColumn
       class << self
         def define_attribute_methods
           super
-          metadata_column_fields.keys.each { |field| define_attribute_method field }
+          metadata_column_fields.keys.each { |field| define_attribute_method field.to_s }
         end
 
         def define_method_attribute(attr_name)
-          return super(attr_name) unless metadata_column_fields.include?(attr_name.to_sym)
-          attribute_method_matchers.each do |matcher|
-            method_name = matcher.method_name(attr_name)
-            define_proxy_call true, generated_attribute_methods, method_name, matcher.method_missing_target, attr_name.to_s
-            attribute_method_matchers_cache.clear
-          end
+          return super unless metadata_column_fields.include?(attr_name.to_sym)
+          generated_attribute_methods.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+            def __temp__#{attr_name}
+              options = self.class.metadata_column_fields[:#{attr_name}] || {}
+              default = options.include?(:default) ? options[:default] : nil
+              _metadata_hash.include?('#{attr_name}') ? HasMetadataColumn.metadata_typecast(_metadata_hash['#{attr_name}'], options[:type]) : default
+            end
+          RUBY
+        end
+
+        def define_method_attribute=(attr_name)
+          return super unless metadata_column_fields.include?(attr_name.to_sym)
+          generated_attribute_methods.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+            def __temp__#{attr_name}=(value)
+              attribute_will_change! :#{attr_name}
+              old = _metadata_hash['#{attr_name}']
+              send (self.class.metadata_column + '='), _metadata_hash.merge('#{attr_name}' => value).to_json
+              @_metadata_hash          = nil
+              @_changed_metadata[attr] = old
+              value
+            end
+          RUBY
         end
       end
     end
