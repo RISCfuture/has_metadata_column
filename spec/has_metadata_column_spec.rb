@@ -250,6 +250,11 @@ describe HasMetadataColumn do
         expect(@object.login_changed?).to be_false
         expect(@object.untyped_changed?).to be_false
       end
+
+      it "should not set changed_metadata if the value is identical to the old value" do
+        @object.untyped   = 'foo'
+        expect(@object.untyped_changed?).to be_false
+      end
     end
   end
 

@@ -161,6 +161,7 @@ module HasMetadataColumn
           return super unless metadata_column_fields.include?(attr_name.to_sym)
           generated_attribute_methods.module_eval <<-RUBY, __FILE__, __LINE__ + 1
             def __temp__#{attr_name}=(value)
+              return value if _metadata_hash.include?(attr_name.to_s) && value == _metadata_hash[attr_name.to_s]
               attribute_will_change! :#{attr_name}
               old = _metadata_hash['#{attr_name}']
               send (self.class.metadata_column + '='), _metadata_hash.merge('#{attr_name}' => value).to_json
@@ -287,6 +288,7 @@ module HasMetadataColumn
 
   def attribute_with_metadata=(attr, value)
     return send(:attribute_without_metadata=, attr, value) unless self.class.metadata_column_fields.include?(attr.to_sym)
+    return value if _metadata_hash.include?(attr.to_s) && value == _metadata_hash[attr.to_s]
 
     attribute_will_change! attr
     old = _metadata_hash[attr.to_s]
