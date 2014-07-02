@@ -19,6 +19,10 @@ end
 module HasMetadataColumn
   extend ActiveSupport::Concern
 
+  included do
+    after_save :_reset_metadata, prepend: true
+  end
+
   # Valid values for the `:type` option.
   TYPES = [String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
 
@@ -224,20 +228,6 @@ module HasMetadataColumn
   # @private
   def inspect
     "#<#{self.class.to_s} #{attributes.except(self.class.metadata_column.to_s).merge(_metadata_hash.try!(:stringify_keys) || {}).map { |k, v| "#{k}: #{v.inspect}" }.join(', ')}>"
-  end
-
-  # @private
-  def save(*)
-    response = super
-    _reset_metadata if response
-    response
-  end
-
-  # @private
-  def save!(*)
-    super.tap do
-      _reset_metadata
-    end
   end
 
   # @private
