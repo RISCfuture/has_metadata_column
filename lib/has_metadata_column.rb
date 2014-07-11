@@ -19,10 +19,6 @@ end
 module HasMetadataColumn
   extend ActiveSupport::Concern
 
-  included do
-    after_save :_reset_metadata, prepend: true
-  end
-
   # Valid values for the `:type` option.
   TYPES = [String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
 
@@ -107,7 +103,6 @@ module HasMetadataColumn
         class_attribute :metadata_column
         self.metadata_column = column || :metadata
 
-        alias_method_chain :changed_attributes, :metadata_column
         alias_method_chain :attribute_will_change!, :metadata_column
         alias_method_chain :attribute_method?, :metadata
         alias_method_chain :attribute, :metadata
@@ -166,7 +161,6 @@ module HasMetadataColumn
               old = _metadata_hash['#{attr_name}']
               send (self.class.metadata_column + '='), _metadata_hash.merge('#{attr_name}' => value).to_json
               @_metadata_hash          = nil
-              @_changed_metadata[attr] = old
               value
             end
           RUBY
@@ -235,15 +229,10 @@ module HasMetadataColumn
   def reload(*)
     super.tap do
       @_metadata_hash    = nil
-      _reset_metadata
     end
   end
 
   private
-
-  def changed_attributes_with_metadata_column
-    changed_attributes_without_metadata_column.merge(_changed_metadata)
-  end
 
   def attribute_will_change_with_metadata_column!(attr)
     unless attribute_names.include?(attr)
@@ -258,10 +247,6 @@ module HasMetadataColumn
     rescue ActiveModel::MissingAttributeError
       {}
     end
-  end
-
-  def _changed_metadata
-    @_changed_metadata ||= {}
   end
 
   ## ATTRIBUTE MATCHER METHODS
@@ -294,7 +279,6 @@ module HasMetadataColumn
     old = _metadata_hash[attr.to_s]
     send :"#{self.class.metadata_column}=", _metadata_hash.merge(attr.to_s => value).to_json
     @_metadata_hash          = nil
-    @_changed_metadata[attr] = old
     value
   end
 
@@ -309,9 +293,5 @@ module HasMetadataColumn
 
   def attribute_method_with_metadata?(attr)
     self.class.metadata_column_fields.include?(attr.to_sym) || attribute_method_without_metadata?(attr)
-  end
-
-  def _reset_metadata
-    @_changed_metadata = {}
   end
 end

@@ -240,6 +240,19 @@ describe HasMetadataColumn do
       expect(SpecSupport::HasMetadataTester.new(login: 'hello').changes).to eql('login' => [nil, 'hello'])
     end
 
+    it "should propogate changes to previous_changes" do
+      @object.login   = 'me'
+      @object.untyped = 'baz'
+      expect(@object.changes['login']).to eql([nil, 'me'])
+      expect(@object.changes['untyped']).to eql(%w( foo baz ))
+
+      @object.save
+
+      expect(@object.changes).to be_empty
+      expect(@object.previous_changes['login']).to eql([nil, 'me'])
+      expect(@object.previous_changes['untyped']).to eql(%w( foo baz ))
+    end
+
     describe "#attribute_changed?" do
       it "should work with metadata attributes" do
         @object.login   = 'me'
