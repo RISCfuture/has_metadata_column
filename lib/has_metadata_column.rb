@@ -138,7 +138,12 @@ module HasMetadataColumn
       class << self
         def define_attribute_methods
           super
-          metadata_column_fields.keys.each { |field| define_attribute_method field.to_s }
+          return if @metadata_attribute_methods_generated
+          @_generated_metadata_attribute_methods ||= Mutex.new
+          @_generated_metadata_attribute_methods.synchronize do
+            metadata_column_fields.keys.each { |field| define_attribute_method field.to_s }
+            @metadata_attribute_methods_generated = true
+          end
         end
 
         def define_method_attribute(attr_name)
