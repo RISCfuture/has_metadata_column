@@ -110,6 +110,7 @@ module HasMetadataColumn
         alias_method_chain :attribute_before_type_cast, :metadata
         alias_method_chain :attribute=, :metadata
         alias_method_chain :query_attribute, :metadata
+        alias_method_chain :keys_for_partial_write, :metadata
       else
         raise "Cannot redefine existing metadata column #{self.metadata_column}" if column && column != self.metadata_column
         if metadata_column_fields.slice(*fields.keys) != fields
@@ -292,5 +293,9 @@ module HasMetadataColumn
 
   def attribute_method_with_metadata?(attr)
     self.class.metadata_column_fields.include?(attr.to_sym) || attribute_method_without_metadata?(attr)
+  end
+
+  def keys_for_partial_write_with_metadata
+    keys_for_partial_write_without_metadata - self.class.metadata_column_fields.keys.map(&:to_s)
   end
 end

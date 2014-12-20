@@ -16,7 +16,7 @@ describe HasMetadataColumn do
       expect { SpecSupport::HasMetadataTester.new.inherited = true }.to raise_error(NoMethodError)
       sc           = SpecSupport::HasMetadataSubclass.new
       sc.inherited = true
-      expect(sc.inherited).to be_true
+      expect(sc.inherited).to be_truthy
       sc.untyped = 'foo'
       expect(sc.untyped).to eql('foo')
     end
@@ -29,9 +29,7 @@ describe HasMetadataColumn do
       expect { SpecSupport::HasMetadataSubclass.has_metadata_column(:other) }.to raise_error(/metadata/)
     end
 
-    it "should allow subclasses to omit a custom metadata column" do
-      pending "There's gotta be an easy way to test this"
-    end
+    it "should allow subclasses to omit a custom metadata column"
 
     it "should not allow types that cannot be serialized to JSON" do
       expect { SpecSupport::HasMetadataTester.has_metadata_column(bad_type: {type: Regexp}) }.to raise_error(ArgumentError, /Regexp/)
@@ -180,39 +178,39 @@ describe HasMetadataColumn do
     context "untyped field" do
       it "should return true if the string is not blank" do
         @object.metadata = {untyped: 'foo'}.to_json
-        expect(@object.untyped?).to be_true
+        expect(@object.untyped?).to be_truthy
       end
 
       it "should return false if the string is blank" do
         @object.metadata = {untyped: ' '}.to_json
-        expect(@object.untyped?).to be_false
+        expect(@object.untyped?).to be_falsey
 
         @object.metadata = {untyped: ''}.to_json
-        expect(@object.untyped?).to be_false
+        expect(@object.untyped?).to be_falsey
       end
     end
 
     context "numeric field" do
       it "should return true if the number is not zero" do
         @object.metadata = {number: 4}.to_json
-        expect(@object.number?).to be_true
+        expect(@object.number?).to be_truthy
       end
 
       it "should return false if the number is zero" do
         @object.metadata = {number: 0}.to_json
-        expect(@object.number?).to be_false
+        expect(@object.number?).to be_falsey
       end
     end
 
     context "typed, non-numeric field" do
       it "should return true if the string is not blank" do
         @object.metadata = {can_be_nil: Date.today}.to_json
-        expect(@object.can_be_nil?).to be_true
+        expect(@object.can_be_nil?).to be_truthy
       end
 
       it "should return false if the string is blank" do
         @object.metadata = {can_be_nil: nil}.to_json
-        expect(@object.can_be_nil?).to be_false
+        expect(@object.can_be_nil?).to be_falsey
       end
     end
   end
@@ -244,11 +242,11 @@ describe HasMetadataColumn do
       it "should work with metadata attributes" do
         @object.login   = 'me'
         @object.untyped = 'baz'
-        expect(@object.login_changed?).to be_true
-        expect(@object.untyped_changed?).to be_true
+        expect(@object.login_changed?).to be_truthy
+        expect(@object.untyped_changed?).to be_truthy
         @object.save!
-        expect(@object.login_changed?).to be_false
-        expect(@object.untyped_changed?).to be_false
+        expect(@object.login_changed?).to be_falsey
+        expect(@object.untyped_changed?).to be_falsey
       end
     end
   end
