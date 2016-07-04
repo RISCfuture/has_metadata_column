@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails', '>= 4.2'
+gem 'rails', '>= 5.0'
 gem 'boolean'
 
 group :development do
@@ -11,5 +11,7 @@ group :development do
   gem 'yard'
   gem 'redcarpet'
   # DEV
-  gem 'jeweler'
+  gem 'juwelier'
+
+  gem 'activemodel-serializers-xml'
 end

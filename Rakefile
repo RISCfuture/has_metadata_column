@@ -11,8 +11,8 @@ rescue Bundler::BundlerError => e
 end
 require 'rake'
 
-require 'jeweler'
-Jeweler::Tasks.new do |gem|
+require 'juwelier'
+Juwelier::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name                  = "has_metadata_column"
   gem.homepage              = "http://github.com/riscfuture/has_metadata_column"
@@ -25,7 +25,7 @@ Jeweler::Tasks.new do |gem|
   gem.files                 = %w( lib/**/* has_metadata_column.gemspec LICENSE README.md )
   # dependencies defined in Gemfile
 end
-Jeweler::RubygemsDotOrgTasks.new
+Juwelier::RubygemsDotOrgTasks.new
 
 require 'rspec/core'
 require 'rspec/core/rake_task'

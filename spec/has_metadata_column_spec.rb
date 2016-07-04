@@ -375,7 +375,7 @@ describe HasMetadataColumn do
       expect(@object.to_xml).to eql(<<-XML)
 <?xml version="1.0" encoding="UTF-8"?>
 <has-metadata-tester>
-  <id type="integer" nil="true"/>
+  <id nil="true"/>
   <login nil="true"/>
   <untyped nil="true"/>
   <can-be-nil nil="true"/>
@@ -396,7 +396,7 @@ describe HasMetadataColumn do
       expect(@object.to_xml(except: :untyped)).to eql(<<-XML)
 <?xml version="1.0" encoding="UTF-8"?>
 <has-metadata-tester>
-  <id type="integer" nil="true"/>
+  <id nil="true"/>
   <login nil="true"/>
   <can-be-nil nil="true"/>
   <can-be-nil-with-default type="date">#{Date.today.to_s}</can-be-nil-with-default>
@@ -440,7 +440,7 @@ describe HasMetadataColumn do
       expect(@object.to_xml(:only => [:untyped, :id])).to eql(<<-XML)
 <?xml version="1.0" encoding="UTF-8"?>
 <has-metadata-tester>
-  <id type="integer" nil="true"/>
+  <id nil="true"/>
   <untyped nil="true"/>
 </has-metadata-tester>
       XML
@@ -460,7 +460,7 @@ describe HasMetadataColumn do
       expect(@object.to_xml(methods: :foo)).to eql(<<-XML)
 <?xml version="1.0" encoding="UTF-8"?>
 <has-metadata-tester>
-  <id type="integer" nil="true"/>
+  <id nil="true"/>
   <login nil="true"/>
   <foo type="integer">1</foo>
   <untyped nil="true"/>
@@ -480,7 +480,7 @@ describe HasMetadataColumn do
       expect(@object.to_xml(methods: [:foo, :bar])).to eql(<<-XML)
 <?xml version="1.0" encoding="UTF-8"?>
 <has-metadata-tester>
-  <id type="integer" nil="true"/>
+  <id nil="true"/>
   <login nil="true"/>
   <foo type="integer">1</foo>
   <bar>1</bar>

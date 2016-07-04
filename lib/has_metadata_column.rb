@@ -19,6 +19,8 @@ end
 module HasMetadataColumn
   extend ActiveSupport::Concern
 
+  included { prepend Extensions }
+
   # Valid values for the `:type` option.
   TYPES = [String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
 
@@ -102,15 +104,6 @@ module HasMetadataColumn
         self.metadata_column_fields = fields.deep_clone
         class_attribute :metadata_column
         self.metadata_column = column || :metadata
-
-        # alias_method_chain :changed_attributes, :metadata_column
-        alias_method_chain :attribute_will_change!, :metadata_column
-        alias_method_chain :attribute_method?, :metadata
-        alias_method_chain :attribute, :metadata
-        alias_method_chain :attribute_before_type_cast, :metadata
-        alias_method_chain :attribute=, :metadata
-        alias_method_chain :query_attribute, :metadata
-        alias_method_chain :keys_for_partial_write, :metadata
       else
         raise "Cannot redefine existing metadata column #{self.metadata_column}" if column && column != self.metadata_column
         if metadata_column_fields.slice(*fields.keys) != fields
@@ -172,10 +165,10 @@ module HasMetadataColumn
 
   # @private
   def as_json(options={})
-    options          ||= Hash.new # the JSON encoder can sometimes give us nil options?
-    options[:except] = Array.wrap(options[:except]) + [self.class.metadata_column]
-    metadata         = self.class.metadata_column_fields.keys
-    metadata &= Array.wrap(options[:only]) if options[:only]
+    options           ||= Hash.new # the JSON encoder can sometimes give us nil options?
+    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata          = self.class.metadata_column_fields.keys
+    metadata          &= Array.wrap(options[:only]) if options[:only]
     metadata          -= Array.wrap(options[:except])
     options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
@@ -183,9 +176,9 @@ module HasMetadataColumn
 
   # @private
   def to_xml(options={})
-    options[:except] = Array.wrap(options[:except]) + [self.class.metadata_column]
-    metadata         = self.class.metadata_column_fields.keys
-    metadata &= Array.wrap(options[:only]) if options[:only]
+    options[:except]  = Array.wrap(options[:except]) + [self.class.metadata_column]
+    metadata          = self.class.metadata_column_fields.keys
+    metadata          &= Array.wrap(options[:only]) if options[:only]
     metadata          -= Array.wrap(options[:except])
     options[:methods] = Array.wrap(options[:methods]) + metadata
     super options
@@ -218,7 +211,7 @@ module HasMetadataColumn
       end
     end
 
-    super(pairs - fake_attributes)
+    super(pairs.except(*fake_attributes.keys))
   end
 
   # @private
@@ -229,18 +222,11 @@ module HasMetadataColumn
   # @private
   def reload(*)
     super.tap do
-      @_metadata_hash    = nil
+      @_metadata_hash = nil
     end
   end
 
   private
-
-  def attribute_will_change_with_metadata_column!(attr)
-    unless attribute_names.include?(attr)
-      send :"#{self.class.metadata_column}_will_change!"
-    end
-    attribute_will_change_without_metadata_column! attr
-  end
 
   def _metadata_hash
     @_metadata_hash ||= begin
@@ -250,52 +236,61 @@ module HasMetadataColumn
     end
   end
 
-  ## ATTRIBUTE MATCHER METHODS
+  module Extensions
+    def attribute_will_change!(attr)
+      unless attribute_names.include?(attr)
+        send :"#{self.class.metadata_column}_will_change!"
+      end
+      super
+    end
 
-  def attribute_with_metadata(attr)
-    return attribute_without_metadata(attr) unless self.class.metadata_column_fields.include?(attr.to_sym)
+    ## ATTRIBUTE MATCHER METHODS
 
-    options = self.class.metadata_column_fields[attr.to_sym] || {}
-    default = options.include?(:default) ? options[:default] : nil
-    _metadata_hash.include?(attr) ? HasMetadataColumn.metadata_typecast(_metadata_hash[attr], options[:type]) : default
-  end
+    def attribute(attr)
+      return super unless self.class.metadata_column_fields.include?(attr.to_sym)
 
-  def attribute_before_type_cast_with_metadata(attr)
-    return attribute_before_type_cast_without_metadata(attr) unless self.class.metadata_column_fields.include?(attr.to_sym)
-    options = self.class.metadata_column_fields[attr.to_sym] || {}
-    default = options.include?(:default) ? options[:default] : nil
-    _metadata_hash.include?(attr) ? _metadata_hash[attr] : default
-  end
+      options = self.class.metadata_column_fields[attr.to_sym] || {}
+      default = options.include?(:default) ? options[:default] : nil
+      _metadata_hash.include?(attr) ? HasMetadataColumn.metadata_typecast(_metadata_hash[attr], options[:type]) : default
+    end
 
-  def _attribute_with_metadata(attr)
-    return _attribute_without_metadata(attr) unless self.class.metadata_column_fields.include?(attr.to_sym)
-    attribute_with_metadata attr
-  end
+    def attribute_before_type_cast(attr)
+      return super unless self.class.metadata_column_fields.include?(attr.to_sym)
+      options = self.class.metadata_column_fields[attr.to_sym] || {}
+      default = options.include?(:default) ? options[:default] : nil
+      _metadata_hash.include?(attr) ? _metadata_hash[attr] : default
+    end
 
-  def attribute_with_metadata=(attr, value)
-    return send(:attribute_without_metadata=, attr, value) unless self.class.metadata_column_fields.include?(attr.to_sym)
+    def _attribute(attr)
+      return super unless self.class.metadata_column_fields.include?(attr.to_sym)
+      attribute attr
+    end
 
-    attribute_will_change! attr
-    old = _metadata_hash[attr.to_s]
-    send :"#{self.class.metadata_column}=", _metadata_hash.merge(attr.to_s => value).to_json
-    @_metadata_hash          = nil
-    value
-  end
+    def attribute=(attr, value)
+      return super unless self.class.metadata_column_fields.include?(attr.to_sym)
 
-  def query_attribute_with_metadata(attr)
-    return query_attribute_without_metadata(attr) unless self.class.metadata_column_fields.include?(attr.to_sym)
-    return false unless (value = send(attr))
-    options = self.class.metadata_column_fields[attr.to_sym] || {}
-    type    = options[:type] || String
-    return !value.to_i.zero? if type.ancestors.include?(Numeric)
-    return !value.blank?
-  end
+      attribute_will_change! attr
+      old = _metadata_hash[attr.to_s]
+      send :"#{self.class.metadata_column}=", _metadata_hash.merge(attr.to_s => value).to_json
+      @_metadata_hash = nil
+      value
+    end
 
-  def attribute_method_with_metadata?(attr)
-    self.class.metadata_column_fields.include?(attr.to_sym) || attribute_method_without_metadata?(attr)
-  end
+    def query_attribute(attr)
+      return super unless self.class.metadata_column_fields.include?(attr.to_sym)
+      return false unless (value = send(attr))
+      options = self.class.metadata_column_fields[attr.to_sym] || {}
+      type    = options[:type] || String
+      return !value.to_i.zero? if type.ancestors.include?(Numeric)
+      return !value.blank?
+    end
 
-  def keys_for_partial_write_with_metadata
-    keys_for_partial_write_without_metadata - self.class.metadata_column_fields.keys.map(&:to_s)
+    def attribute_method?(attr)
+      self.class.metadata_column_fields.include?(attr.to_sym) || super
+    end
+
+    def keys_for_partial_write
+      super - self.class.metadata_column_fields.keys.map(&:to_s)
+    end
   end
 end

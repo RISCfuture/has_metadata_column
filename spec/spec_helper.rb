@@ -19,7 +19,9 @@ module SpecSupport
   end
 
   class HasMetadataTester < ActiveRecord::Base
+    include ActiveModel::Serializers::Xml
     include HasMetadataColumn
+
     self.table_name = 'users'
     has_metadata_column :metadata,
                         untyped:                    {},
