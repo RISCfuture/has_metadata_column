@@ -118,6 +118,8 @@ module HasMetadataColumn
           type_validate = !options.delete(:skip_type_validation)
           options.delete :default
 
+          attribute name
+
           validate do |obj|
             value = obj.send(name)
             if !HasMetadataColumn.metadata_typecast(value, type).kind_of?(type) &&
