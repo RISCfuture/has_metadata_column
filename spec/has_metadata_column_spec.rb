@@ -462,7 +462,6 @@ describe HasMetadataColumn do
 <has-metadata-tester>
   <id nil="true"/>
   <login nil="true"/>
-  <foo type="integer">1</foo>
   <untyped nil="true"/>
   <can-be-nil nil="true"/>
   <can-be-nil-with-default type="date">#{Date.today.to_s}</can-be-nil-with-default>
@@ -474,6 +473,7 @@ describe HasMetadataColumn do
   <date nil="true"/>
   <has-default>default</has-default>
   <no-valid nil="true"/>
+  <foo type="integer">1</foo>
 </has-metadata-tester>
       XML
 
@@ -482,8 +482,6 @@ describe HasMetadataColumn do
 <has-metadata-tester>
   <id nil="true"/>
   <login nil="true"/>
-  <foo type="integer">1</foo>
-  <bar>1</bar>
   <untyped nil="true"/>
   <can-be-nil nil="true"/>
   <can-be-nil-with-default type="date">#{Date.today.to_s}</can-be-nil-with-default>
@@ -495,6 +493,8 @@ describe HasMetadataColumn do
   <date nil="true"/>
   <has-default>default</has-default>
   <no-valid nil="true"/>
+  <foo type="integer">1</foo>
+  <bar>1</bar>
 </has-metadata-tester>
       XML
     end

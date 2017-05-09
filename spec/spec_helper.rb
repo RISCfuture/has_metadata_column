@@ -30,11 +30,11 @@ module SpecSupport
                         can_be_blank:               { type: Date, allow_blank: true },
                         can_be_blank_with_default:  { type: Date, allow_blank: true, default: Date.today },
                         cannot_be_nil_with_default: { type: Boolean, allow_nil: false, default: false },
-                        number:                     { type: Fixnum, numericality: true },
+                        number:                     { type: Integer, numericality: true },
                         boolean:                    { type: Boolean },
                         date:                       { type: Date },
                         has_default:                { default: 'default' },
-                        no_valid:                   { type: Fixnum, skip_type_validation: true }
+                        no_valid:                   { type: Integer, skip_type_validation: true }
   end
 
   class HasMetadataSubclass < HasMetadataTester

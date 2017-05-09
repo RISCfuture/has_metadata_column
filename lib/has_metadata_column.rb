@@ -22,7 +22,7 @@ module HasMetadataColumn
   included { prepend Extensions }
 
   # Valid values for the `:type` option.
-  TYPES = [String, Fixnum, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
+  TYPES = [String, Integer, Float, Hash, Array, TrueClass, FalseClass, Boolean, NilClass, Date, Time]
 
   # @private
   def self.metadata_typecast(value, type=nil)
@@ -30,7 +30,7 @@ module HasMetadataColumn
     raise ArgumentError, "Can't convert objects of type #{type.to_s}" unless TYPES.include?(type)
 
     if value.kind_of?(String) then
-      if type == Integer or type == Fixnum then
+      if type == Integer then
         begin
           return Integer(value.sub(/^0+/, '')) # so that it doesn't think it's in octal
         rescue ArgumentError
